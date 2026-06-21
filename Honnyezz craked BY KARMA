@@ -1,0 +1,1188 @@
+-- el script es 100% chat gpt
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/HonnyDezz/pruebas/refs/heads/main/libreria%203"))()
+
+-- ========================================================
+-- [ NUEVA FUNCIÃ“N: AUTO TAMAÃ‘O Y CIERRE R ]
+-- ========================================================
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local function ejecutarAutoSize()
+    local rEvents = ReplicatedStorage:WaitForChild("rEvents", 5)
+    if rEvents then
+        local changeEvent = rEvents:WaitForChild("changeSettingsEvent", 5)
+        if changeEvent then
+            local args = {
+                [1] = "changeSize",
+                [2] = 1
+            }
+            changeEvent:FireServer(unpack(args))
+            print("[ðŸ“] TamaÃ±o 1 solicitado al servidor.")
+            
+            task.wait(0.3)
+            if LocalPlayer.Character then
+                LocalPlayer.Character:BreakJoints()
+                print("[ðŸ’€] Personaje reseteado para actualizar escala.")
+            end
+        else
+            warn("[âš ï¸] No se encontrÃ³ 'changeSettingsEvent' en rEvents.")
+        end
+    else
+        warn("[âš ï¸] No se encontrÃ³ la carpeta 'rEvents' en ReplicatedStorage.")
+    end
+end
+
+-- EjecuciÃ³n inmediata
+ejecutarAutoSize()
+
+-- Panel Visual (Indicador R)
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "IndicadorR"
+screenGui.Parent = game:GetService("CoreGui")
+screenGui.ResetOnSpawn = false
+
+local circle = Instance.new("Frame")
+circle.Size = UDim2.new(0, 50, 0, 50)
+circle.Position = UDim2.new(0.02, 0, 0.8, 0)
+circle.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+circle.BorderSizePixel = 0
+circle.Active = true
+circle.Draggable = true 
+circle.Parent = screenGui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = circle
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(255, 0, 0) 
+stroke.Thickness = 2
+stroke.Parent = circle
+
+local label = Instance.new("TextLabel")
+label.Size = UDim2.new(1, 0, 1, 0)
+label.BackgroundTransparency = 1
+label.Text = "R"
+label.TextColor3 = Color3.fromRGB(255, 255, 255)
+label.Font = Enum.Font.GothamBold
+label.TextSize = 20
+label.Parent = circle
+
+-- FunciÃ³n de Cierre
+local function cerrarJuego()
+    print("[â›”] Cerrando el juego...")
+    local success, err = pcall(function()
+        game:Shutdown()
+    end)
+    if not success then
+        if syn then syn.exit()
+        elseif Fluxus then Fluxus.shutdown()
+        elseif krnl then krnl.exit()
+        elseif wave then wave.exit()
+        elseif Solara then Solara.exit()
+        end
+    end
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed then
+        if input.KeyCode == Enum.KeyCode.R then
+            cerrarJuego()
+        end
+    end
+end)
+
+-- ========================================================
+-- [ INICIO DEL SCRIPT ORIGINAL ]
+-- ========================================================
+
+-- CREACIÃ“N DE VENTANA ÃšNICA
+local window = library:AddWindow("OMEGADEZZ HUB | Weight", {
+    main_color = Color3.fromRGB(255, 0, 0),
+    min_size = Vector2.new(340, 470),
+    can_minimize = true
+})
+
+local Killer = window:AddTab("KILL")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local playerWhitelist = {}
+local targetPlayerNames = {}
+local autoGoodKarma = false
+local autoBadKarma = false
+local autoKill = false
+local killTarget = false
+local spying = false
+local autoEquipPunch = false
+local autoPunchNoAnim = false
+local targetDropdownItems = {}
+local availableTargets = {}
+
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local friendWhitelistActive = false
+
+Killer:AddSwitch("Amigos de lista blanca", function(state)
+    friendWhitelistActive = state
+
+    if state then
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and LocalPlayer:IsFriendsWith(player.UserId) then
+                playerWhitelist[player.Name] = true
+            end
+        end
+
+        Players.PlayerAdded:Connect(function(player)
+            if friendWhitelistActive and player ~= LocalPlayer and LocalPlayer:IsFriendsWith(player.UserId) then
+                playerWhitelist[player.Name] = true
+            end
+        end)
+    else
+        for name in pairs(playerWhitelist) do
+            local friend = Players:FindFirstChild(name)
+            if friend and LocalPlayer:IsFriendsWith(friend.UserId) then
+                playerWhitelist[name] = nil
+            end
+        end
+    end
+end)
+
+Killer:AddSwitch("Auto Matar", function(bool)
+    autoKill = bool
+
+    task.spawn(function()
+        while autoKill do
+            local character = LocalPlayer.Character
+            if not character then 
+                task.wait(1) 
+                continue 
+            end
+
+            local rightHand = character:FindFirstChild("RightHand")
+            local leftHand = character:FindFirstChild("LeftHand")
+            local punchTool = LocalPlayer.Backpack:FindFirstChild("Punch") or character:FindFirstChild("Punch")
+
+            -- 1. Equipar la herramienta de golpe si existe
+            if punchTool and punchTool.Parent ~= character then
+                punchTool.Parent = character
+            end
+
+            -- 2. Bucle para atacar a los jugadores
+            for _, target in ipairs(Players:GetPlayers()) do
+                if target ~= LocalPlayer and not playerWhitelist[target.Name] then
+                    local targetChar = target.Character
+                    local rootPart = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+                    local targetHumanoid = targetChar and targetChar:FindFirstChild("Humanoid")
+
+                    -- Solo atacar si el objetivo estÃ¡ vivo
+                    if rootPart and targetHumanoid and targetHumanoid.Health > 0 then
+                        pcall(function()
+                            -- MÃ‰TODO A: DaÃ±o por contacto fÃ­sico (Touch)
+                            if rightHand then
+                                firetouchinterest(rightHand, rootPart, 1)
+                                task.wait()
+                                firetouchinterest(rightHand, rootPart, 0)
+                            end
+
+                            -- MÃ‰TODO B: DaÃ±o por RemoteEvent (El que encontraste con Cobalt)
+                            -- Si el evento requiere argumentos especÃ­ficos, se ponen aquÃ­
+                            if attackEvent then
+                                attackEvent:FireServer("dmgLabel", rootPart.CFrame, 1)
+                            end
+                        end)
+                    end
+                end
+            end
+
+            task.wait(0.1) -- Delay para evitar lag o baneos del anticheat
+        end
+    end)
+end)
+
+local targetDropdown = Killer:AddDropdown("Seleccionar Jugador Objetivo", function(name)
+    if name and not table.find(targetPlayerNames, name) then
+        table.insert(targetPlayerNames, name)
+    end
+end)
+
+Killer:AddTextBox("Remover al Jugador Objetivo", function(name)
+    for i, v in ipairs(targetPlayerNames) do
+        if v == name then
+            table.remove(targetPlayerNames, i)
+            break
+        end
+    end
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        targetDropdown:Add(player.Name)
+        targetDropdownItems[player.Name] = true
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        targetDropdown:Add(player.Name)
+        targetDropdownItems[player.Name] = true
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if targetDropdownItems[player.Name] then
+        targetDropdownItems[player.Name] = nil
+        targetDropdown:Clear()
+        for name in pairs(targetDropdownItems) do
+            targetDropdown:Add(name)
+        end
+    end
+
+    for i = #targetPlayerNames, 1, -1 do
+        if targetPlayerNames[i] == player.Name then
+            table.remove(targetPlayerNames, i)
+        end
+    end
+end)
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Referencia al evento que detectaste previamente
+local globalTween = ReplicatedStorage:WaitForChild("rEvents"):FindFirstChild("globalTween")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local globalTween = ReplicatedStorage:WaitForChild("rEvents"):FindFirstChild("globalTween")
+
+Killer:AddSwitch("Matar (Efectivo en Movimiento)", function(state)
+    killTarget = state
+
+    task.spawn(function()
+        while killTarget do
+            for _, name in ipairs(targetPlayerNames) do
+                local target = Players:FindFirstChild(name)
+                local tChar = target and target.Character
+                local tRoot = tChar and tChar:FindFirstChild("HumanoidRootPart")
+                local tHum = tChar and tChar:FindFirstChild("Humanoid")
+
+                if tRoot and tHum and tHum.Health > 0 then
+                    pcall(function()
+                        -- 1. Calculamos hacia dÃ³nde se mueve el jugador (PredicciÃ³n)
+                        -- Multiplicamos la velocidad por 0.15 para "adelantarnos" a su carrera
+                        local velocity = tRoot.Velocity
+                        local predictedPos = tRoot.Position + (velocity * 0.15)
+                        local predictedCFrame = CFrame.new(predictedPos)
+
+                        -- 2. Spam de rÃ¡faga: Enviamos 3 golpes por ciclo con ligeras variaciones
+                        -- Esto asegura que al menos uno de los paquetes llegue en la posiciÃ³n vÃ¡lida
+                        globalTween:FireServer("dmgLabel", tRoot.CFrame, 50000) -- PosiciÃ³n exacta
+                        globalTween:FireServer("dmgLabel", predictedCFrame, 50000) -- PosiciÃ³n adelantada
+                        
+                        -- 3. Si el juego es estricto, intentamos golpear al Humanoid directamente
+                        globalTween:FireServer("dmgLabel", tHum, 50000)
+                    end)
+                end
+            end
+            -- Velocidad de ejecuciÃ³n mÃ¡xima sin crashear el evento (aprox 60-100 veces por seg)
+            task.wait(0.01) 
+        end
+    end)
+end)
+
+local spyTargetDropdown = Killer:AddDropdown("Seleccionar Objetivo", function(name)
+    targetPlayerName = name
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        spyTargetDropdown:Add(player.Name)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        spyTargetDropdown:Add(player.Name)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if player ~= LocalPlayer then
+        spyTargetDropdown:Clear()
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer then
+                spyTargetDropdown:Add(plr.Name)
+            end
+        end
+    end
+end)
+
+Killer:AddSwitch("Espectear al Jugador", function(bool)
+    spying = bool
+    if not spying then
+        local cam = workspace.CurrentCamera
+        cam.CameraSubject = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") or LocalPlayer
+        return
+    end
+    task.spawn(function()
+        while spying do
+            local target = Players:FindFirstChild(targetPlayerName)
+            if target and target ~= LocalPlayer then
+                local humanoid = target.Character and target.Character:FindFirstChild("Humanoid")
+                if humanoid then
+                    workspace.CurrentCamera.CameraSubject = humanoid
+                end
+            end
+            task.wait(0.1)
+        end
+    end)
+end)
+
+local button = Killer:AddButton("Remover Animacion de PuÃ±os", function()
+    local blockedAnimations = {
+        ["rbxassetid://3638729053"] = true,
+        ["rbxassetid://3638767427"] = true,
+    }
+
+    local function setupAnimationBlocking()
+        local char = game.Players.LocalPlayer.Character
+        if not char or not char:FindFirstChild("Humanoid") then return end
+
+        local humanoid = char:FindFirstChild("Humanoid")
+
+        for _, track in pairs(humanoid:GetPlayingAnimationTracks()) do
+            if track.Animation then
+                local animId = track.Animation.AnimationId
+                local animName = track.Name:lower()
+
+                if blockedAnimations[animId] or
+                    animName:match("punch") or
+                    animName:match("attack") or
+                    animName:match("right") then
+                    track:Stop()
+                end
+            end
+        end
+
+        if not _G.AnimBlockConnection then
+            local connection = humanoid.AnimationPlayed:Connect(function(track)
+                if track.Animation then
+                    local animId = track.Animation.AnimationId
+                    local animName = track.Name:lower()
+
+                    if blockedAnimations[animId] or
+                        animName:match("punch") or
+                        animName:match("attack") or
+                        animName:match("right") then
+                        track:Stop()
+                    end
+                end
+            end)
+
+            _G.AnimBlockConnection = connection
+        end
+    end
+
+    setupAnimationBlocking()
+
+    local function overrideToolActivation()
+        local function processTool(tool)
+            if tool and (tool.Name == "Punch" or tool.Name:match("Attack") or tool.Name:match("Right")) then
+                if not tool:GetAttribute("ActivatedOverride") then
+                    tool:SetAttribute("ActivatedOverride", true)
+
+                    local connection = tool.Activated:Connect(function()
+                        task.wait(0.05)
+
+                        local char = game.Players.LocalPlayer.Character
+                        if char and char:FindFirstChild("Humanoid") then
+                            for _, track in pairs(char.Humanoid:GetPlayingAnimationTracks()) do
+                                if track.Animation then
+                                    local animId = track.Animation.AnimationId
+                                    local animName = track.Name:lower()
+
+                                    if blockedAnimations[animId] or
+                                        animName:match("punch") or
+                                        animName:match("attack") or
+                                        animName:match("right") then
+                                        track:Stop()
+                                    end
+                                end
+                            end
+                        end
+                    end)
+
+                    if not _G.ToolConnections then
+                        _G.ToolConnections = {}
+                    end
+                    _G.ToolConnections[tool] = connection
+                end
+            end
+        end
+
+        for _, tool in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+            processTool(tool)
+        end
+
+        local char = game.Players.LocalPlayer.Character
+        if char then
+            for _, tool in pairs(char:GetChildren()) do
+                if tool:IsA("Tool") then
+                    processTool(tool)
+                end
+            end
+        end
+
+        if not _G.BackpackAddedConnection then
+            _G.BackpackAddedConnection = game.Players.LocalPlayer.Backpack.ChildAdded:Connect(function(child)
+                if child:IsA("Tool") then
+                    task.wait(0.1)
+                    processTool(child)
+                end
+            end)
+        end
+
+        if not _G.CharacterToolAddedConnection and char then
+            _G.CharacterToolAddedConnection = char.ChildAdded:Connect(function(child)
+                if child:IsA("Tool") then
+                    task.wait(0.1)
+                    processTool(child)
+                end
+            end)
+        end
+    end
+
+    overrideToolActivation()
+
+    if not _G.AnimMonitorConnection then
+        _G.AnimMonitorConnection = game:GetService("RunService").Heartbeat:Connect(function()
+            if tick() % 0.5 < 0.01 then
+                local char = game.Players.LocalPlayer.Character
+                if char and char:FindFirstChild("Humanoid") then
+                    for _, track in pairs(char.Humanoid:GetPlayingAnimationTracks()) do
+                        if track.Animation then
+                            local animId = track.Animation.AnimationId
+                            local animName = track.Name:lower()
+
+                            if blockedAnimations[animId] or
+                                animName:match("punch") or
+                                animName:match("attack") or
+                                animName:match("right") then
+                                track:Stop()
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    if not _G.CharacterAddedConnection then
+        _G.CharacterAddedConnection = game.Players.LocalPlayer.CharacterAdded:Connect(function(newChar)
+            task.wait(1)
+            setupAnimationBlocking()
+            overrideToolActivation()
+
+            if _G.CharacterToolAddedConnection then
+                _G.CharacterToolAddedConnection:Disconnect()
+            end
+
+            _G.CharacterToolAddedConnection = newChar.ChildAdded:Connect(function(child)
+                if child:IsA("Tool") then
+                    task.wait(0.1)
+                    processTool(child)
+                end
+            end)
+        end)
+    end
+end)
+
+function RecoveryPunch()
+    if _G.AnimBlockConnection then
+        _G.AnimBlockConnection:Disconnect()
+        _G.AnimBlockConnection = nil
+    end
+    if _G.AnimMonitorConnection then
+        _G.AnimMonitorConnection:Disconnect()
+        _G.AnimMonitorConnection = nil
+    end
+    if _G.ToolConnections then
+        for _, conn in pairs(_G.ToolConnections) do
+            if conn then conn:Disconnect() end
+        end
+        _G.ToolConnections = nil
+    end
+    if _G.BackpackAddedConnection then
+        _G.BackpackAddedConnection:Disconnect()
+        _G.BackpackAddedConnection = nil
+    end
+    if _G.CharacterToolAddedConnection then
+        _G.CharacterToolAddedConnection:Disconnect()
+        _G.CharacterToolAddedConnection = nil
+    end
+    if _G.CharacterAddedConnection then
+        _G.CharacterAddedConnection:Disconnect()
+        _G.CharacterAddedConnection = nil
+    end
+end
+
+Killer:AddButton("Reactivar Animacion de PuÃ±os", function()
+    RecoveryPunch()
+end)
+
+
+local showKillsButton = Killer:AddButton("Contador de Muertes", function()
+	killsShown = not killsShown
+
+	if killsShown then
+		if not killsGui then
+			killsGui = Instance.new("ScreenGui")
+			killsGui.Name = "KillsGui"
+			killsGui.ResetOnSpawn = false
+			killsGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+			local killsFrame = Instance.new("Frame")
+			killsFrame.Size = UDim2.new(0, 180, 0, 55)
+			killsFrame.Position = UDim2.new(0.5, -90, 0, 60)
+			killsFrame.BackgroundColor3 = Color3.fromRGB(97, 0, 5)
+			killsFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+			killsFrame.Active = true
+			killsFrame.Draggable = true
+			killsFrame.Parent = killsGui
+
+			local titleLabel = Instance.new("TextLabel")
+			titleLabel.Size = UDim2.new(1, 0, 0, 20)
+			titleLabel.Position = UDim2.new(0, 0, 0, 0)
+			titleLabel.BackgroundTransparency = 1
+			titleLabel.Text = "OMEGADEZZ HUB"
+			titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			titleLabel.Font = Enum.Font.SourceSansBold
+			titleLabel.TextScaled = true
+			titleLabel.Parent = killsFrame
+
+			local killsLabel = Instance.new("TextLabel")
+			killsLabel.Size = UDim2.new(1, 0, 0, 35)
+			killsLabel.Position = UDim2.new(0, 0, 0, 20)
+			killsLabel.BackgroundTransparency = 1
+			killsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+			killsLabel.TextScaled = true
+			killsLabel.Font = Enum.Font.SourceSansBold
+			killsLabel.Parent = killsFrame
+
+			coroutine.wrap(function()
+				while killsGui and killsGui.Parent do
+					local kills = LocalPlayer:FindFirstChild("leaderstats") and LocalPlayer.leaderstats:FindFirstChild("Kills")
+					if kills then
+						killsLabel.Text = "Kills: " .. tostring(kills.Value)
+					else
+						killsLabel.Text = "Kills: 0"
+					end
+					task.wait(0.2)
+				end
+			end)()
+		else
+			killsGui.Enabled = true
+		end
+	else
+		if killsGui then
+			killsGui.Enabled = false
+		end
+	end
+end)
+
+showKillsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+Killer:AddLabel("â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”", Color3.fromRGB(100, 100, 100))
+
+Killer:AddSwitch("Anti AFK", function(state)
+    if state then
+        local func = loadstring(game:HttpGet("https://pastebin.com/raw/r37Ct26d"))
+        if func then
+            func()
+            print("[âœ…] Anti AFK activado correctamente.")
+        else
+            warn("[âŒ] Error al cargar el Anti AFK.")
+        end
+    else
+        print("[âšª] Anti AFK desactivado (no se ejecutarÃ¡).")
+    end
+end)
+
+Killer:AddButton("Ejecutar OMEGA FLY", function()
+    local success, err = pcall(function()
+        loadstring(game:HttpGet("https://pastebin.com/raw/92uVadU5"))()
+    end)
+    
+    if success then
+        if library and library.Notification then
+            library:Notification("Script ejecutado correctamente.")
+        else
+            print("Script ejecutado correctamente.")
+        end
+    else
+        warn("Error al ejecutar el script: "..err)
+    end
+end)
+
+-- COORDENADAS PROPORCIONADAS
+local targetPos = Vector3.new(-671.8472290039062, 1361.75, -5763.95166015625)
+
+Killer:AddButton("TP a UbicaciÃ³n Especial", function()
+    local player = game:GetService("Players").LocalPlayer
+    local character = player.Character
+    
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        -- Teletransporte directo con un pequeÃ±o margen de altura (offset)
+        character.HumanoidRootPart.CFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0))
+        
+        -- NotificaciÃ³n interna de la librerÃ­a (si la soporta) o del sistema
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "TP Exitoso",
+            Text = "Has llegado a la ubicaciÃ³n.",
+            Duration = 2
+        })
+    else
+        print("Error: No se encontrÃ³ el personaje.")
+    end
+end)
+
+local farm = window:AddTab("FARM")
+
+-- Nuevo Switch de Auto Pesa (Corregido)
+farm:AddSwitch("Auto Pesa", function(bool)
+    weightOn = bool
+    
+    if weightOn then
+        task.spawn(function()
+            while weightOn do
+                local player = game.Players.LocalPlayer
+                local character = player.Character
+                
+                -- Buscamos la pesa en la mochila o en la mano
+                local tool = player.Backpack:FindFirstChild("Weight") or (character and character:FindFirstChild("Weight"))
+                
+                if tool then
+                    -- 1. Si estÃ¡ en la mochila, la equipamos
+                    if tool.Parent == player.Backpack then
+                        tool.Parent = character
+                    end
+                    
+                    -- 2. "Usamos" la pesa (Esto es lo que da la fuerza)
+                    tool:Activate()
+                end
+                
+                -- Espera corta para mÃ¡xima velocidad sin lag
+                task.wait(0.1) 
+            end
+        end)
+    end
+end)
+
+-- VARIABLES DE SERVICIOS
+local player = game:GetService("Players").LocalPlayer
+local strengthEvent = player:WaitForChild("strengthEvent")
+local rEvents = game:GetService("ReplicatedStorage"):WaitForChild("rEvents")
+local buyPetRemote = rEvents:WaitForChild("buyPetRemote")
+local warnEvent = rEvents:WaitForChild("warningEvent")
+local plrPets = player:WaitForChild("plrPets")
+
+-- ESTADOS (Toggles)
+local flags = {
+    autoFarm = false,
+    autoPetRebirth = false,
+    autoEquip = false
+}
+
+--- [ SECCIÃ“N PRINCIPAL ] ---
+
+farm:AddSwitch("Auto Strength (0.1s)", function(state)
+    _G.AutoStrength = state
+    
+    -- Variables extraÃ­das de tu script original
+    local LocalPlayer = game.Players.LocalPlayer
+    local strengthEvent = LocalPlayer:WaitForChild("strengthEvent")
+    
+    -- Bucle de entrenamiento
+    task.spawn(function()
+        while _G.AutoStrength do
+            local Character = LocalPlayer.Character
+            -- Verificamos si el personaje existe y tiene vida (como el script original)
+            if Character and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
+                
+                -- Disparamos el evento de fuerza directamente
+                strengthEvent:FireServer("rep")
+                
+            end
+            
+            -- El nombre dice 0.1s, pero el script original tiene un wait(1) en el servidor.
+            -- Si 0.1s no te da fuerza, sube el valor a 1.0 para que coincida con el servidor.
+            task.wait(0.1) 
+        end
+    end)
+end)
+
+farm:AddButton("Velocidad MÃ¡xima", function()
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = 100
+    end
+end)
+
+
+Killer:AddSwitch("Auto Stomp", function(state)
+    _G.AutoStomp = state
+    task.spawn(function()
+        while _G.AutoStomp do
+            pcall(function()
+                -- El pisotÃ³n suele ser una herramienta llamada "Stomp" o un evento directo
+                local char = game.Players.LocalPlayer.Character
+                local stomp = game.Players.LocalPlayer.Backpack:FindFirstChild("Stomp") or char:FindFirstChild("Stomp")
+                if stomp then
+                    char.Humanoid:EquipTool(stomp)
+                    stomp:Activate()
+                end
+                -- Disparamos el evento de pisotÃ³n si existe en rEvents
+                if rEvents:FindFirstChild("stompEvent") then
+                    rEvents.stompEvent:FireServer()
+                end
+            end)
+            task.wait(0.1)
+        end
+    end)
+end)
+
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local autoPunch = false -- Control del bucle
+
+Killer:AddSwitch("Auto Golpe (Combat Fast)", function(bool)
+    autoPunch = bool
+
+    task.spawn(function()
+        while autoPunch do
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
+                
+                local tool = character:FindFirstChild("Combat") or LocalPlayer.Backpack:FindFirstChild("Combat")
+                
+                if tool then
+                    -- Auto Equipar
+                    if tool.Parent ~= character then
+                        tool.Parent = character
+                    end
+                    
+                    -- ðŸ”¥ MODO FAST: Ejecuta mÃºltiples golpes por ciclo
+                    -- Buscamos el evento remoto para saltarnos la animaciÃ³n
+                    local event = tool:FindFirstChildOfClass("RemoteEvent")
+                    
+                    if event then
+                        -- Dispara el evento 3-5 veces por ciclo para velocidad extrema
+                        event:FireServer()
+                        event:FireServer()
+                        event:FireServer()
+                    else
+                        -- Si no hay evento, usamos Activate pero mÃ¡s rÃ¡pido
+                        tool:Activate()
+                    end
+                end
+            end
+            
+            -- Velocidad de refresco (0.01 es casi instantÃ¡neo)
+            -- Si el juego te banea/expulsa, sÃºbelo a 0.05 o 0.1
+            task.wait(0.01) 
+        end
+    end)
+end)
+-- ðŸ“Œ Teleport / Follow System (versiÃ³n auto-follow desde Dropdown)
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local following = false
+local followTarget = nil
+
+-- FunciÃ³n auxiliar: TP DETRÃS del jugador
+function followPlayer(targetPlayer)
+    local myChar = LocalPlayer.Character
+    local targetChar = targetPlayer.Character
+
+    if not (myChar and targetChar) then return end
+    local myHRP = myChar:FindFirstChild("HumanoidRootPart")
+    local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
+
+    if myHRP and targetHRP then
+        -- ðŸ“Œ PosiciÃ³n 3 studs detrÃ¡s de su espalda
+        local followPos = targetHRP.CFrame.Position - (targetHRP.CFrame.LookVector * 3)
+        -- ðŸ“Œ Teletransportar mirando hacia el mismo lado que el jugador
+        myHRP.CFrame = CFrame.new(followPos, followPos + targetHRP.CFrame.LookVector)
+    end
+end
+
+farm:AddLabel("â”â”â”â”â”â”â” TP AL PLAYER â”â”â”â”â”â”â”â”â”")
+-- Dropdown dinÃ¡mico de jugadores
+local followDropdown = farm:AddDropdown("Seguir Jugador (TP)", function(selected)
+    if selected and selected ~= "" then
+        local target = Players:FindFirstChild(selected)
+        if target then
+            followTarget = target.Name
+            following = true
+            print("Started following:", target.Name)
+
+            -- TP inmediato al seleccionarlo
+            followPlayer(target)
+        end
+    end
+end)
+
+-- Inicializar lista de jugadores
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.Name)
+    end
+end
+
+-- Mantener lista actualizada
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        followDropdown:Add(player.Name)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    followDropdown:Clear()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            followDropdown:Add(plr.Name)
+        end
+    end
+    if followTarget == player.Name then
+        followTarget = nil
+        following = false
+    end
+end)
+
+-- BotÃ³n para dejar de seguir
+farm:AddButton("Dejar de Seguir", function()
+    following = false
+    followTarget = nil
+    print("Stopped following")
+end)
+
+-- Loop de seguimiento automÃ¡tico
+task.spawn(function()
+    while true do
+        task.wait(0.2) -- cada 0.2s para actualizar TP
+        if following and followTarget then
+            local target = Players:FindFirstChild(followTarget)
+            if target then
+                followPlayer(target)
+            else
+                following = false
+                followTarget = nil
+            end
+        end
+    end
+end)
+
+
+local godDamageActive = false
+
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Variables de configuraciÃ³n
+local currentRadius = 15
+getgenv().killNearby = false
+
+-- Referencia al evento (usando el que detectaste con Cobalt)
+local globalTween = ReplicatedStorage:WaitForChild("rEvents"):FindFirstChild("globalTween")
+
+-- 1. Control del TamaÃ±o del Aura
+farm:AddTextBox("TamaÃ±o de Aura", function(text)
+    local value = tonumber(text)
+    if value then
+        currentRadius = math.clamp(value, 1, 150)
+    end
+end)
+
+-- 2. Switch del Kill Aura
+farm:AddSwitch("Aura Kill (Combat)", function(state)
+    getgenv().killNearby = state
+    
+    -- CreaciÃ³n del cÃ­rculo visual
+    local radiusVisual = Instance.new("Part")
+    radiusVisual.Anchored = true
+    radiusVisual.CanCollide = false
+    radiusVisual.Transparency = 0.5
+    radiusVisual.Material = Enum.Material.ForceField
+    radiusVisual.Color = Color3.fromRGB(255, 0, 0) -- Rojo
+    radiusVisual.Shape = Enum.PartType.Cylinder
+    radiusVisual.Rotation = Vector3.new(0, 0, 90) -- Acostado en el suelo
+    
+    task.spawn(function()
+        while getgenv().killNearby do
+            local myChar = LocalPlayer.Character
+            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            
+            if myRoot then
+                -- Actualizar posiciÃ³n del cÃ­rculo visual
+                radiusVisual.Parent = workspace
+                radiusVisual.Size = Vector3.new(0.1, currentRadius * 2, currentRadius * 2)
+                radiusVisual.CFrame = myRoot.CFrame * CFrame.new(0, -3, 0) * CFrame.Angles(0, 0, math.rad(90))
+                
+                -- Auto-Equipar Combat
+                local tool = LocalPlayer.Backpack:FindFirstChild("Combat") or myChar:FindFirstChild("Combat")
+                if tool and tool.Parent ~= myChar then
+                    tool.Parent = myChar
+                end
+
+                -- Buscar vÃ­ctimas dentro del rango
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer then
+                        local char = player.Character
+                        local root = char and char:FindFirstChild("HumanoidRootPart")
+                        local hum = char and char:FindFirstChild("Humanoid")
+                        
+                        if root and hum and hum.Health > 0 then
+                            local distance = (root.Position - myRoot.Position).Magnitude
+                            
+                            if distance <= currentRadius then
+                                pcall(function()
+                                    -- Ejecutar el ataque
+                                    if tool and tool.Parent == myChar then
+                                        tool:Activate()
+                                    end
+                                    
+                                    -- DaÃ±o fÃ­sico por contacto
+                                    firetouchinterest(myRoot, root, 1)
+                                    firetouchinterest(myRoot, root, 0)
+                                    
+                                    -- Disparar Remote detectado
+                                    if globalTween then
+                                        globalTween:FireServer("dmgLabel", root.CFrame, 50000)
+                                    end
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+            task.wait(0.1) -- Velocidad de escaneo
+        end
+        radiusVisual:Destroy()
+    end)
+end)
+
+farm:AddButton("Iniciar IN", function()
+    loadstring(game:HttpGet("https://pastebin.com/raw/yXe2HReU"))()
+end)
+
+farm:AddButton("Rebirth Manual", function()
+    -- Ejecuta la acciÃ³n una sola vez al presionar
+    pcall(function()
+        rEvents.rebirthEvent:FireServer()
+    end)
+end)
+
+farm:AddSwitch("Auto Santa", function(state)
+    _G.AutoEquipBest = state
+    task.spawn(function()
+        while _G.AutoEquipBest do
+            pcall(function()
+                local bestPet = nil
+                local maxLvl = -1
+                for _, pet in pairs(game.Players.LocalPlayer.plrPets:GetChildren()) do
+                    if pet:FindFirstChild("Level") and pet.Level.Value > maxLvl then
+                        maxLvl = pet.Level.Value
+                        bestPet = pet.Name
+                    end
+                end
+                if bestPet then
+                    rEvents.buyPetRemote:InvokeServer(bestPet, "equipPet")
+                end
+            end)
+            task.wait(10)
+        end
+    end)
+end)
+
+-- Funciones para bloquear / desbloquear la posiciÃ³n
+local lockedConnection = nil
+local lockedCFrame = nil
+
+local function lockPlayerPosition(currentCFrame)
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        warn("[âš ï¸] No se encontrÃ³ el personaje para bloquear la posiciÃ³n.")
+        return
+    end
+
+    lockedCFrame = currentCFrame
+    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+
+    -- Mantiene la posiciÃ³n fija
+    lockedConnection = game:GetService("RunService").Stepped:Connect(function()
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            player.Character.HumanoidRootPart.CFrame = lockedCFrame
+        end
+    end)
+
+    print("[âœ…] PosiciÃ³n bloqueada.")
+end
+
+local function unlockPlayerPosition()
+    if lockedConnection then
+        lockedConnection:Disconnect()
+        lockedConnection = nil
+        print("[âšª] PosiciÃ³n desbloqueada.")
+    end
+end
+
+-----------------------------------------------------
+-- ðŸ”˜ Switch para Lock Position
+-----------------------------------------------------
+farm:AddSwitch("Lock Position", function(bool)
+    local player = game:GetService("Players").LocalPlayer
+
+    if bool then
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local currentPosition = player.Character.HumanoidRootPart.CFrame
+            lockPlayerPosition(currentPosition)
+        end
+    else
+        unlockPlayerPosition()
+    end
+end)
+
+local farming = false -- Variable para controlar el estado
+
+farm:AddButton("Auto Bench BakuDezz ULTRA", function()
+    farming = not farming 
+    
+    if not farming then 
+        print("Auto-farm detenido.")
+        return 
+    end
+
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+
+    -- Teletransporte inmediato
+    hrp.CFrame = CFrame.new(-765.201, 1363.887 + 2, -5575.739)
+    task.wait(0.2) -- Reducido de 0.5 a 0.2
+
+    -- InteracciÃ³n rÃ¡pida con E
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    task.wait(0.05)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    
+    print("Ejercitando a mÃ¡xima velocidad...")
+
+    -- Bucle de ejercicio optimizado
+    task.spawn(function() 
+        while farming do
+            -- Enviar clic (Presionar y soltar casi al mismo tiempo)
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+            task.wait(0.01) -- Tiempo mÃ­nimo para que el juego registre el clic
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+            
+            -- ESTE ES EL VALOR QUE DETERMINA LA VELOCIDAD:
+            -- Prueba con 0.1. Si el juego lo permite, bÃ¡jalo a 0.05.
+            task.wait(0.1) 
+        end
+    end)
+end)
+-----------------------------------------------------------------------------
+farm:AddButton("Auto Bench HonnyDezz", function()
+    farming = not farming -- Cambia entre encendido y apagado cada vez que pulsas
+    
+    if not farming then 
+        print("Auto-farm detenido.")
+        return 
+    end
+
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+
+    -- 1. Teletransporte a la base de la mÃ¡quina (Space Press)
+    -- Usamos las coordenadas exactas de tu captura
+    hrp.CFrame = CFrame.new(-765.201, 1379.146, -5682.735)
+    task.wait(0.5)
+
+    -- 2. Interactuar para sentarse (Tecla E)
+    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.E, false, game)
+    task.wait(0.1)
+    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.E, false, game)
+    
+    print("Ejercitando...")
+
+    -- 3. Bucle de ejercicio (Auto-Click)
+    -- Se ejecutarÃ¡ mientras la variable 'farming' sea verdadera
+    spawn(function() -- Usamos spawn para que el script no se bloquee aquÃ­
+        while farming do
+            -- Simula un clic izquierdo del mouse
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+            task.wait(0.1)
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+            
+            task.wait(0.3) -- Velocidad de levantamiento
+        end
+    end)
+end)
+------------------------------------------------------------------------------
+
+farm:AddSwitch("Auto Rebirth", function(state)
+    _G.AutoRebirth = state
+    task.spawn(function()
+        while _G.AutoRebirth do
+            pcall(function()
+                rEvents.rebirthEvent:FireServer()
+            end)
+            task.wait(1)
+        end
+    end)
+end)
+
+farm:AddButton("Tp Luna", function()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-477.866, 1618.731, -5452.73)
+end)
+---------------------------------------------------------------------------------
+-- Referencias a los servicios y el evento segÃºn tus capturas
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local players = game:GetService("Players")
+local player = players.LocalPlayer
+
+-- El evento remoto se encuentra en rEvents.changeSettingsEvent
+local changeEvent = replicatedStorage:WaitForChild("rEvents"):WaitForChild("changeSettingsEvent")
+
+-- 1. Cambiar el tamaÃ±o a 1 automÃ¡ticamente
+-- El primer argumento es la acciÃ³n "changeSize" y el segundo el valor 1
+local args = {
+    [1] = "changeSize",
+    [2] = 1
+}
+
+-- Se dispara el evento al servidor
+changeEvent:FireServer(unpack(args))
+
+-- 2. Resetear el personaje inmediatamente para aplicar el cambio
+-- Usamos task.wait para asegurar que el servidor reciba la peticiÃ³n antes de morir
+task.wait(0.1) 
+if player.Character then
+    player.Character:BreakJoints()
+end
