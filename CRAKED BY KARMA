@@ -1,43 +1,5 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-              100% CHAT GPT
-
-
-
--- IDs autorizados
-local whitelist = {
-    [5379259260] = true, -- U_fake8
-    [2635475747] = true, -- itsBAJAMILIONcat
-    [4160431650] = true, -- Arlexuim
-    [3818320344] = true, -- honnydezz_z
-    [2976707365] = true, -- HonnyyDezz
-    [8794305427] = true, -- Honnydezz_11
-    [4101839813] = true, -- adansito_exe
-    [3989684179] = true, -- obed8399
-    [4110774637] = true, -- salvador227656
-	[8420350494] = true, --//Sxxzz9966
-	[8266114272] = true, --//BulkyLuxury
-	[7287800145] = true, --//ghost_secu4
-}
-
-if not whitelist[LocalPlayer.UserId] then
-    local msg = Instance.new("ScreenGui", game.CoreGui)
-    local txt = Instance.new("TextLabel", msg)
-    msg.ResetOnSpawn = false
-    txt.Size = UDim2.new(1,0,1,0)
-    txt.BackgroundColor3 = Color3.fromRGB(0,0,0)
-    txt.TextColor3 = Color3.fromRGB(255,0,0)
-    txt.TextScaled = true
-    txt.Font = Enum.Font.GothamBold
-    txt.Text = "🚫 No estás autorizado para usar OMEGADEZZ HUB\nDesarrollado por HonnyDezz 😎🔥"
-
-    task.wait(4)
-    msg:Destroy()
-    game.Players.LocalPlayer:Kick("Whitelist requerida para usar OMEGADEZZ HUB ❗")
-    
-    return
-end
-
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/HonnyDezz/pruebas/refs/heads/main/libreria%203"))()
 
 -- 🪟 Crear ventana principal
