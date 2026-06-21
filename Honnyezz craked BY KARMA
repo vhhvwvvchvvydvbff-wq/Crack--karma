@@ -99,7 +99,7 @@ end)
 -- ========================================================
 
 -- CREACIÃ“N DE VENTANA ÃšNICA
-local window = library:AddWindow("OMEGADEZZ HUB | Weight", {
+local window = library:AddWindow("OMEGADEZZ HUB CRAKED BY KARMA | Weight", {
     main_color = Color3.fromRGB(255, 0, 0),
     min_size = Vector2.new(340, 470),
     can_minimize = true
