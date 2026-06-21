@@ -1,5 +1,8 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+              100% CHAT GPT
+
+
 
 -- IDs autorizados
 local whitelist = {
@@ -38,7 +41,7 @@ end
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/HonnyDezz/pruebas/refs/heads/main/libreria%203"))()
 
 -- 🪟 Crear ventana principal
-local window = library:AddWindow("OMEGADEZZ HUB | Kill - By HonnyDezz", {
+local window = library:AddWindow("OMEGADEZZ HUB CRAKED BY KARMA | Kill - By HonnyDezz", {
     main_color = Color3.fromRGB(0, 0, 0), -- rojo oscuro
     min_size = Vector2.new(340, 490),
     can_minimize = true
